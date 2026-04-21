@@ -108,8 +108,6 @@ public class ContactServiceImpl implements ContactService {
                     .orElseGet(() -> {
                         Company newCompany = new Company();
                         newCompany.setName(companyName);
-                        // Default values for implicitly created companies
-                        newCompany.setIndustry("Technology");
                         return companyRepository.save(newCompany);
                     });
             companiesToSet.add(company);
