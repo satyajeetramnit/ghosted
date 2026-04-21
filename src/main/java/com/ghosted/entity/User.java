@@ -30,7 +30,7 @@ public class User extends BaseEntity {
     private String lastName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "provider", nullable = false)
+    @Column(name = "provider", nullable = true)
     private AuthProvider provider = AuthProvider.LOCAL;
 
 }

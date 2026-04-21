@@ -49,7 +49,7 @@ public class Contact extends BaseEntity {
     private String role; // Their job title
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "category", nullable = false)
+    @Column(name = "category", nullable = true)
     private ContactCategory category = ContactCategory.OTHER;
 
     @Column(columnDefinition = "TEXT")
