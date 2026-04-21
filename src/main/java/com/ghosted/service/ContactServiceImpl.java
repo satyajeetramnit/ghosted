@@ -89,7 +89,7 @@ public class ContactServiceImpl implements ContactService {
     private void updateContactFields(Contact contact, ContactRequestDTO requestDTO) {
         contact.setName(requestDTO.getName());
         contact.setEmail(requestDTO.getEmail());
-        contact.setPhoneNumber(requestDTO.getPhoneNumber());
+        contact.setPhone(requestDTO.getPhone());
         contact.setRole(requestDTO.getRole());
         contact.setCategory(requestDTO.getCategory());
         contact.setNotes(requestDTO.getNotes());
@@ -108,7 +108,7 @@ public class ContactServiceImpl implements ContactService {
         dto.setId(contact.getId());
         dto.setName(contact.getName());
         dto.setEmail(contact.getEmail());
-        dto.setPhoneNumber(contact.getPhoneNumber());
+        dto.setPhone(contact.getPhone());
         dto.setRole(contact.getRole());
         dto.setCategory(contact.getCategory());
         dto.setNotes(contact.getNotes());

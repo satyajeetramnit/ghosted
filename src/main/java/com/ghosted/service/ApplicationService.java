@@ -22,6 +22,7 @@ public interface ApplicationService {
     InterviewResponseDTO addInterview(UUID applicationId, UUID userId, InterviewRequestDTO requestDTO);
     InterviewResponseDTO updateInterview(UUID applicationId, UUID interviewId, UUID userId, InterviewRequestDTO requestDTO);
     void deleteInterview(UUID applicationId, UUID interviewId, UUID userId);
+    java.util.List<InterviewResponseDTO> getAllInterviewsForUser(UUID userId);
 
     // OA Management
     OAResponseDTO updateOA(UUID applicationId, UUID userId, OARequestDTO requestDTO);

@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface InterviewRepository extends JpaRepository<Interview, UUID> {
     List<Interview> findByApplicationIdOrderByScheduledAtAsc(UUID applicationId);
+    List<Interview> findByApplicationUserIdOrderByScheduledAtAsc(UUID userId);
 }

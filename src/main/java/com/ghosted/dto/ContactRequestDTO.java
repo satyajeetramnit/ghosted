@@ -17,7 +17,7 @@ public class ContactRequestDTO {
 
     private String email;
 
-    private String phoneNumber;
+    private String phone;
 
     private String role;
 

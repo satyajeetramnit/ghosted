@@ -23,5 +23,5 @@ public class ApplicationResponseDTO {
     private String contactCategory;
     
     private java.util.List<InterviewResponseDTO> interviews;
-    private OAResponseDTO onlineAssessment;
+    private OAResponseDTO oa;
 }

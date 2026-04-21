@@ -14,7 +14,7 @@ public class ContactResponseDTO {
     private UUID id;
     private String name;
     private String email;
-    private String phoneNumber;
+    private String phone;
     private String role;
     private String linkedInUrl;
     private ContactCategory category;

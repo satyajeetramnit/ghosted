@@ -55,6 +55,13 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(responses, "Applications fetched successfully"));
     }
 
+    @GetMapping("/interviews")
+    public ResponseEntity<ApiResponse<java.util.List<InterviewResponseDTO>>> getAllInterviews(
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        java.util.List<InterviewResponseDTO> response = applicationService.getAllInterviewsForUser(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(response, "All interviews fetched successfully"));
+    }
+
 
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateStatus(

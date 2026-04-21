@@ -199,6 +199,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.List<InterviewResponseDTO> getAllInterviewsForUser(UUID userId) {
+        return interviewRepository.findByApplicationUserIdOrderByScheduledAtAsc(userId)
+                .stream()
+                .map(this::mapToInterviewResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public OAResponseDTO updateOA(UUID applicationId, UUID userId, OARequestDTO requestDTO) {
         Application application = applicationRepository.findById(applicationId)
@@ -249,7 +258,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // Fetch and map OA
         oaRepository.findByApplicationId(application.getId())
-                .ifPresent(oa -> dto.setOnlineAssessment(mapToOAResponseDTO(oa)));
+                .ifPresent(oa -> dto.setOa(mapToOAResponseDTO(oa)));
 
         return dto;
     }

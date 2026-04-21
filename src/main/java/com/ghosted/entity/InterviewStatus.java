@@ -3,5 +3,6 @@ package com.ghosted.entity;
 public enum InterviewStatus {
     SCHEDULED,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    PENDING_FEEDBACK
 }

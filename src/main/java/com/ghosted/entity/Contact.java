@@ -42,8 +42,8 @@ public class Contact extends BaseEntity {
     @Column
     private String email;
 
-    @Column(name = "phone_number")
-    private String phoneNumber;
+    @Column(name = "phone")
+    private String phone;
 
     @Column
     private String role; // Their job title
