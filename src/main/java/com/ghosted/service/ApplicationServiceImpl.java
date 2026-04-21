@@ -290,3 +290,4 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setNotes(oa.getNotes());
         return dto;
     }
+}
