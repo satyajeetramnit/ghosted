@@ -25,13 +25,18 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/applications")
+@RequestMapping("/applications")
 public class ApplicationController {
 
     private final ApplicationService applicationService;
 
     public ApplicationController(ApplicationService applicationService) {
         this.applicationService = applicationService;
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<ApiResponse<String>> checkHealth() {
+        return ResponseEntity.ok(ApiResponse.success("UP", "Backend is healthy and reachable at /api"));
     }
 
     @PostMapping
