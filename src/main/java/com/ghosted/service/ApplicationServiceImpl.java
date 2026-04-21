@@ -175,10 +175,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new ResourceNotFoundException("Interview round not found for this application");
         }
 
-        interview.setType(requestDTO.getType());
-        interview.setScheduledAt(requestDTO.getScheduledAt());
-        interview.setMeetingLink(requestDTO.getMeetingLink());
-        interview.setNotes(requestDTO.getNotes());
+        if (requestDTO.getType() != null) interview.setType(requestDTO.getType());
+        if (requestDTO.getScheduledAt() != null) interview.setScheduledAt(requestDTO.getScheduledAt());
+        if (requestDTO.getMeetingLink() != null) interview.setMeetingLink(requestDTO.getMeetingLink());
+        if (requestDTO.getNotes() != null) interview.setNotes(requestDTO.getNotes());
 
         interview = interviewRepository.save(interview);
         return mapToInterviewResponseDTO(interview);
@@ -221,9 +221,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElse(new OnlineAssessment());
 
         oa.setApplication(application);
-        oa.setPlatform(requestDTO.getPlatform());
-        oa.setDeadline(requestDTO.getDeadline());
-        oa.setNotes(requestDTO.getNotes());
+        if (requestDTO.getPlatform() != null) oa.setPlatform(requestDTO.getPlatform());
+        if (requestDTO.getDeadline() != null) oa.setDeadline(requestDTO.getDeadline());
+        if (requestDTO.getNotes() != null) oa.setNotes(requestDTO.getNotes());
         if (oa.getId() == null) {
             oa.setStatus(OAStatus.PENDING);
         }
