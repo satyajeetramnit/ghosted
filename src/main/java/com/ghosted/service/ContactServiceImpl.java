@@ -95,12 +95,27 @@ public class ContactServiceImpl implements ContactService {
         contact.setNotes(requestDTO.getNotes());
         contact.setLinkedInUrl(requestDTO.getLinkedInUrl());
 
+        Set<Company> companiesToSet = new HashSet<>();
+        
         if (requestDTO.getCompanyIds() != null && !requestDTO.getCompanyIds().isEmpty()) {
             List<Company> companies = companyRepository.findAllById(requestDTO.getCompanyIds());
-            contact.setCompanies(new HashSet<>(companies));
-        } else {
-            contact.setCompanies(new HashSet<>());
+            companiesToSet.addAll(companies);
         }
+
+        if (requestDTO.getCompanyName() != null && !requestDTO.getCompanyName().trim().isEmpty()) {
+            String companyName = requestDTO.getCompanyName().trim();
+            Company company = companyRepository.findByNameIgnoreCase(companyName)
+                    .orElseGet(() -> {
+                        Company newCompany = new Company();
+                        newCompany.setName(companyName);
+                        // Default values for implicitly created companies
+                        newCompany.setIndustry("Technology");
+                        return companyRepository.save(newCompany);
+                    });
+            companiesToSet.add(company);
+        }
+        
+        contact.setCompanies(companiesToSet);
     }
 
     private ContactResponseDTO mapToResponseDTO(Contact contact) {
