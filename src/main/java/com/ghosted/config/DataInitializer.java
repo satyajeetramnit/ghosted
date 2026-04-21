@@ -16,10 +16,12 @@ public class DataInitializer {
     @Bean
     CommandLineRunner initDatabase(UserRepository userRepository) {
         return args -> {
-            if (userRepository.findById(DEFAULT_USER_ID).isEmpty()) {
+            String defaultEmail = "default@example.com";
+            if (userRepository.findById(DEFAULT_USER_ID).isEmpty() && 
+                userRepository.findByEmail(defaultEmail).isEmpty()) {
                 User user = new User();
                 user.setId(DEFAULT_USER_ID);
-                user.setEmail("default@example.com");
+                user.setEmail(defaultEmail);
                 user.setPasswordHash("no-password"); // Placeholder
                 user.setFirstName("Default");
                 user.setLastName("User");
