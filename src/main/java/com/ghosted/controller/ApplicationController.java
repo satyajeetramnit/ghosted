@@ -1,12 +1,8 @@
 package com.ghosted.controller;
 
-import com.ghosted.dto.ApiResponse;
-import com.ghosted.dto.ApplicationRequestDTO;
-import com.ghosted.dto.ApplicationResponseDTO;
-import com.ghosted.dto.ApplicationStatusUpdateDTO;
-import com.ghosted.dto.NoteRequestDTO;
-import com.ghosted.dto.NoteResponseDTO;
+import com.ghosted.dto.*;
 import com.ghosted.service.ApplicationService;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -75,5 +71,45 @@ public class ApplicationController {
         NoteResponseDTO response = applicationService.addNoteToApplication(id, noteRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Note added successfully"));
+    }
+
+    // Interview Management
+    @PostMapping("/{id}/interviews")
+    public ResponseEntity<ApiResponse<InterviewResponseDTO>> addInterview(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody InterviewRequestDTO requestDTO) {
+        InterviewResponseDTO response = applicationService.addInterview(id, userDetails.getId(), requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response, "Interview round added successfully"));
+    }
+
+    @PutMapping("/{id}/interviews/{interviewId}")
+    public ResponseEntity<ApiResponse<InterviewResponseDTO>> updateInterview(
+            @PathVariable UUID id,
+            @PathVariable UUID interviewId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody InterviewRequestDTO requestDTO) {
+        InterviewResponseDTO response = applicationService.updateInterview(id, interviewId, userDetails.getId(), requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(response, "Interview updated successfully"));
+    }
+
+    @DeleteMapping("/{id}/interviews/{interviewId}")
+    public ResponseEntity<ApiResponse<Void>> deleteInterview(
+            @PathVariable UUID id,
+            @PathVariable UUID interviewId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        applicationService.deleteInterview(id, interviewId, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(null, "Interview deleted successfully"));
+    }
+
+    // OA Management
+    @PutMapping("/{id}/oa")
+    public ResponseEntity<ApiResponse<OAResponseDTO>> updateOA(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @Valid @RequestBody OARequestDTO requestDTO) {
+        OAResponseDTO response = applicationService.updateOA(id, userDetails.getId(), requestDTO);
+        return ResponseEntity.ok(ApiResponse.success(response, "Online Assessment updated successfully"));
     }
 }

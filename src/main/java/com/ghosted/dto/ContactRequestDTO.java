@@ -23,6 +23,8 @@ public class ContactRequestDTO {
 
     private ContactCategory category;
 
+    private String linkedInUrl;
+
     private String notes;
 
     private List<UUID> companyIds; // Optional link to companies

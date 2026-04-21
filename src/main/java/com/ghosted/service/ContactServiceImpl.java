@@ -93,6 +93,7 @@ public class ContactServiceImpl implements ContactService {
         contact.setRole(requestDTO.getRole());
         contact.setCategory(requestDTO.getCategory());
         contact.setNotes(requestDTO.getNotes());
+        contact.setLinkedInUrl(requestDTO.getLinkedInUrl());
 
         if (requestDTO.getCompanyIds() != null && !requestDTO.getCompanyIds().isEmpty()) {
             List<Company> companies = companyRepository.findAllById(requestDTO.getCompanyIds());
@@ -111,6 +112,7 @@ public class ContactServiceImpl implements ContactService {
         dto.setRole(contact.getRole());
         dto.setCategory(contact.getCategory());
         dto.setNotes(contact.getNotes());
+        dto.setLinkedInUrl(contact.getLinkedInUrl());
         
         if (contact.getCompanies() != null) {
             List<ContactResponseDTO.CompanyDTO> companyDTOs = contact.getCompanies().stream().map(c -> {

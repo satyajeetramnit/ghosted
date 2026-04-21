@@ -48,6 +48,9 @@ public class Contact extends BaseEntity {
     @Column
     private String role; // Their job title
 
+    @Column(name = "linkedin_url")
+    private String linkedInUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = true)
     private ContactCategory category = ContactCategory.OTHER;

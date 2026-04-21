@@ -16,6 +16,7 @@ public class ContactResponseDTO {
     private String email;
     private String phoneNumber;
     private String role;
+    private String linkedInUrl;
     private ContactCategory category;
     private String notes;
     private List<CompanyDTO> companies;

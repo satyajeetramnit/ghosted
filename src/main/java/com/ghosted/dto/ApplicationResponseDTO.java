@@ -21,4 +21,7 @@ public class ApplicationResponseDTO {
     private UUID contactId;
     private String contactEmail;
     private String contactCategory;
+    
+    private java.util.List<InterviewResponseDTO> interviews;
+    private OAResponseDTO onlineAssessment;
 }

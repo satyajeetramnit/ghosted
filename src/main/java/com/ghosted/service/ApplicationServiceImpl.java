@@ -1,22 +1,9 @@
 package com.ghosted.service;
 
-import com.ghosted.dto.ApplicationRequestDTO;
-import com.ghosted.dto.ApplicationResponseDTO;
-import com.ghosted.dto.ApplicationStatusUpdateDTO;
-import com.ghosted.dto.NoteRequestDTO;
-import com.ghosted.dto.NoteResponseDTO;
-import com.ghosted.entity.Application;
-import com.ghosted.entity.ApplicationStatus;
-import com.ghosted.entity.Company;
-import com.ghosted.entity.Contact;
-import com.ghosted.entity.Note;
-import com.ghosted.entity.User;
+import com.ghosted.dto.*;
+import com.ghosted.entity.*;
 import com.ghosted.exception.ResourceNotFoundException;
-import com.ghosted.repository.ApplicationRepository;
-import com.ghosted.repository.CompanyRepository;
-import com.ghosted.repository.ContactRepository;
-import com.ghosted.repository.NoteRepository;
-import com.ghosted.repository.UserRepository;
+import com.ghosted.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,17 +22,23 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final CompanyRepository companyRepository;
     private final ContactRepository contactRepository;
     private final NoteRepository noteRepository;
+    private final InterviewRepository interviewRepository;
+    private final OnlineAssessmentRepository oaRepository;
 
     public ApplicationServiceImpl(ApplicationRepository applicationRepository,
-                                  UserRepository userRepository,
-                                  CompanyRepository companyRepository,
-                                  ContactRepository contactRepository,
-                                  NoteRepository noteRepository) {
+                                   UserRepository userRepository,
+                                   CompanyRepository companyRepository,
+                                   ContactRepository contactRepository,
+                                   NoteRepository noteRepository,
+                                   InterviewRepository interviewRepository,
+                                   OnlineAssessmentRepository oaRepository) {
         this.applicationRepository = applicationRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
         this.contactRepository = contactRepository;
         this.noteRepository = noteRepository;
+        this.interviewRepository = interviewRepository;
+        this.oaRepository = oaRepository;
     }
 
     @Override
@@ -149,6 +142,87 @@ public class ApplicationServiceImpl implements ApplicationService {
         return responseDTO;
     }
 
+    @Override
+    @Transactional
+    public InterviewResponseDTO addInterview(UUID applicationId, UUID userId, InterviewRequestDTO requestDTO) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found for this user");
+        }
+
+        Interview interview = new Interview();
+        interview.setApplication(application);
+        interview.setType(requestDTO.getType());
+        interview.setScheduledAt(requestDTO.getScheduledAt());
+        interview.setMeetingLink(requestDTO.getMeetingLink());
+        interview.setNotes(requestDTO.getNotes());
+        interview.setStatus(InterviewStatus.SCHEDULED);
+
+        interview = interviewRepository.save(interview);
+        return mapToInterviewResponseDTO(interview);
+    }
+
+    @Override
+    @Transactional
+    public InterviewResponseDTO updateInterview(UUID applicationId, UUID interviewId, UUID userId, InterviewRequestDTO requestDTO) {
+        Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Interview round not found"));
+
+        if (!interview.getApplication().getId().equals(applicationId) || 
+            !interview.getApplication().getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Interview round not found for this application");
+        }
+
+        interview.setType(requestDTO.getType());
+        interview.setScheduledAt(requestDTO.getScheduledAt());
+        interview.setMeetingLink(requestDTO.getMeetingLink());
+        interview.setNotes(requestDTO.getNotes());
+
+        interview = interviewRepository.save(interview);
+        return mapToInterviewResponseDTO(interview);
+    }
+
+    @Override
+    @Transactional
+    public void deleteInterview(UUID applicationId, UUID interviewId, UUID userId) {
+        Interview interview = interviewRepository.findById(interviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Interview round not found"));
+
+        if (!interview.getApplication().getId().equals(applicationId) || 
+            !interview.getApplication().getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Interview round not found for this application");
+        }
+
+        interviewRepository.delete(interview);
+    }
+
+    @Override
+    @Transactional
+    public OAResponseDTO updateOA(UUID applicationId, UUID userId, OARequestDTO requestDTO) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found for this user");
+        }
+
+        OnlineAssessment oa = oaRepository.findByApplicationId(applicationId)
+                .orElse(new OnlineAssessment());
+
+        oa.setApplication(application);
+        oa.setPlatform(requestDTO.getPlatform());
+        oa.setDeadline(requestDTO.getDeadline());
+        oa.setNotes(requestDTO.getNotes());
+        if (oa.getId() == null) {
+            oa.setStatus(OAStatus.PENDING);
+        }
+
+        oa = oaRepository.save(oa);
+        return mapToOAResponseDTO(oa);
+    }
+
     private ApplicationResponseDTO mapToResponseDTO(Application application) {
         ApplicationResponseDTO dto = new ApplicationResponseDTO();
         dto.setId(application.getId());
@@ -158,6 +232,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setStatus(application.getStatus());
         dto.setAppliedDate(application.getAppliedDate());
         dto.setFollowUpDate(application.getFollowUpDate());
+        
         if (application.getContact() != null) {
             dto.setContactId(application.getContact().getId());
             dto.setContactName(application.getContact().getName());
@@ -165,6 +240,37 @@ public class ApplicationServiceImpl implements ApplicationService {
             dto.setContactCategory(application.getContact().getCategory() != null ? 
                 application.getContact().getCategory().name() : null);
         }
+
+        // Fetch and map interviews
+        dto.setInterviews(interviewRepository.findByApplicationIdOrderByScheduledAtAsc(application.getId())
+                .stream()
+                .map(this::mapToInterviewResponseDTO)
+                .collect(Collectors.toList()));
+
+        // Fetch and map OA
+        oaRepository.findByApplicationId(application.getId())
+                .ifPresent(oa -> dto.setOnlineAssessment(mapToOAResponseDTO(oa)));
+
         return dto;
     }
-}
+
+    private InterviewResponseDTO mapToInterviewResponseDTO(Interview interview) {
+        InterviewResponseDTO dto = new InterviewResponseDTO();
+        dto.setId(interview.getId());
+        dto.setType(interview.getType());
+        dto.setStatus(interview.getStatus());
+        dto.setScheduledAt(interview.getScheduledAt());
+        dto.setMeetingLink(interview.getMeetingLink());
+        dto.setNotes(interview.getNotes());
+        return dto;
+    }
+
+    private OAResponseDTO mapToOAResponseDTO(OnlineAssessment oa) {
+        OAResponseDTO dto = new OAResponseDTO();
+        dto.setId(oa.getId());
+        dto.setPlatform(oa.getPlatform());
+        dto.setDeadline(oa.getDeadline());
+        dto.setStatus(oa.getStatus());
+        dto.setNotes(oa.getNotes());
+        return dto;
+    }
