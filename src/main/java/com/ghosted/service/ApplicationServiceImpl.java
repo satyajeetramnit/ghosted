@@ -51,48 +51,59 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     public ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO) {
-        log.info("Creating application for user: {}", userId);
-        
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        Company company = companyRepository.findByNameIgnoreCase(requestDTO.getCompanyName())
-                .orElseGet(() -> {
-                    Company newCompany = new Company();
-                    newCompany.setName(requestDTO.getCompanyName());
-                    return companyRepository.save(newCompany);
-                });
-
-        Contact contact = null;
-        if (requestDTO.getContactId() != null) {
-            contact = contactRepository.findById(requestDTO.getContactId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Contact not found"));
+        try {
+            log.info("Attempting to create application for user: {}, company: {}", userId, requestDTO.getCompanyName());
             
-            // Associate contact with company if not already
-            if (!contact.getCompanies().contains(company)) {
-                contact.getCompanies().add(company);
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+            Company company = companyRepository.findByNameIgnoreCase(requestDTO.getCompanyName().trim())
+                    .orElseGet(() -> {
+                        log.info("Creating new company: {}", requestDTO.getCompanyName());
+                        Company newCompany = new Company();
+                        newCompany.setName(requestDTO.getCompanyName().trim());
+                        return companyRepository.save(newCompany);
+                    });
+
+            Contact contact = null;
+            if (requestDTO.getContactId() != null) {
+                log.info("Linking existing contact: {}", requestDTO.getContactId());
+                contact = contactRepository.findById(requestDTO.getContactId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Contact not found"));
+                
+                if (!contact.getCompanies().contains(company)) {
+                    contact.getCompanies().add(company);
+                    contactRepository.save(contact);
+                }
+            } else if (requestDTO.getContactName() != null && !requestDTO.getContactName().trim().isEmpty()) {
+                log.info("Creating new inline contact: {}", requestDTO.getContactName());
+                Contact newContact = new Contact();
+                newContact.setName(requestDTO.getContactName().trim());
+                newContact.setEmail(requestDTO.getContactEmail());
+                newContact.setUser(user);
+                newContact.getCompanies().add(company);
+                newContact.setCategory(com.ghosted.entity.ContactCategory.HR);
+                contact = contactRepository.save(newContact);
             }
-        } else if (requestDTO.getContactName() != null && !requestDTO.getContactName().trim().isEmpty()) {
-            Contact newContact = new Contact();
-            newContact.setName(requestDTO.getContactName());
-            newContact.setEmail(requestDTO.getContactEmail());
-            newContact.setUser(user);
-            newContact.getCompanies().add(company);
-            newContact.setCategory(com.ghosted.entity.ContactCategory.HR);
-            contact = contactRepository.save(newContact);
+
+            Application application = new Application();
+            application.setUser(user);
+            application.setCompany(company);
+            application.setContact(contact);
+            application.setJobTitle(requestDTO.getJobTitle().trim());
+            application.setJobUrl(requestDTO.getJobUrl());
+            application.setStatus(ApplicationStatus.APPLIED);
+            application.setAppliedDate(java.time.LocalDate.now()); // Explicitly set
+
+            log.info("Saving application entity...");
+            application = applicationRepository.save(application);
+            log.info("Application saved successfully with ID: {}", application.getId());
+
+            return mapToResponseDTO(application);
+        } catch (Exception e) {
+            log.error("CRITICAL ERROR during application creation: {}", e.getMessage(), e);
+            throw e; // Rethrow to let GlobalExceptionHandler handle it
         }
-
-        Application application = new Application();
-        application.setUser(user);
-        application.setCompany(company);
-        application.setContact(contact);
-        application.setJobTitle(requestDTO.getJobTitle());
-        application.setJobUrl(requestDTO.getJobUrl());
-        application.setStatus(ApplicationStatus.APPLIED);
-
-        application = applicationRepository.save(application);
-
-        return mapToResponseDTO(application);
     }
 
     @Override
@@ -151,7 +162,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             dto.setContactId(application.getContact().getId());
             dto.setContactName(application.getContact().getName());
             dto.setContactEmail(application.getContact().getEmail());
-            dto.setContactCategory(application.getContact().getCategory());
+            dto.setContactCategory(application.getContact().getCategory() != null ? 
+                application.getContact().getCategory().name() : null);
         }
         return dto;
     }

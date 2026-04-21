@@ -20,5 +20,5 @@ public class ApplicationResponseDTO {
     private String contactName;
     private UUID contactId;
     private String contactEmail;
-    private com.ghosted.entity.ContactCategory contactCategory;
+    private String contactCategory;
 }
