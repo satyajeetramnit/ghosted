@@ -271,6 +271,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setScheduledAt(interview.getScheduledAt());
         dto.setMeetingLink(interview.getMeetingLink());
         dto.setNotes(interview.getNotes());
+        if (interview.getApplication() != null) {
+            dto.setApplicationId(interview.getApplication().getId());
+            if (interview.getApplication().getCompany() != null) {
+                dto.setCompanyName(interview.getApplication().getCompany().getName());
+            }
+            dto.setJobTitle(interview.getApplication().getJobTitle());
+        }
         return dto;
     }
 

@@ -17,4 +17,7 @@ public class InterviewResponseDTO {
     private LocalDateTime scheduledAt;
     private String meetingLink;
     private String notes;
+    private java.util.UUID applicationId;
+    private String companyName;
+    private String jobTitle;
 }
