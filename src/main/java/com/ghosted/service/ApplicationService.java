@@ -1,10 +1,6 @@
 package com.ghosted.service;
 
-import com.ghosted.dto.ApplicationRequestDTO;
-import com.ghosted.dto.ApplicationResponseDTO;
-import com.ghosted.dto.ApplicationStatusUpdateDTO;
-import com.ghosted.dto.NoteRequestDTO;
-import com.ghosted.dto.NoteResponseDTO;
+import com.ghosted.dto.*;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
