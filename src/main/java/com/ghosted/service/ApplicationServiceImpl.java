@@ -64,7 +64,15 @@ public class ApplicationServiceImpl implements ApplicationService {
                 });
 
         Contact contact = null;
-        if (requestDTO.getContactName() != null && !requestDTO.getContactName().trim().isEmpty()) {
+        if (requestDTO.getContactId() != null) {
+            contact = contactRepository.findById(requestDTO.getContactId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Contact not found"));
+            
+            // Associate contact with company if not already
+            if (!contact.getCompanies().contains(company)) {
+                contact.getCompanies().add(company);
+            }
+        } else if (requestDTO.getContactName() != null && !requestDTO.getContactName().trim().isEmpty()) {
             Contact newContact = new Contact();
             newContact.setName(requestDTO.getContactName());
             newContact.setEmail(requestDTO.getContactEmail());
@@ -140,7 +148,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setAppliedDate(application.getAppliedDate());
         dto.setFollowUpDate(application.getFollowUpDate());
         if (application.getContact() != null) {
+            dto.setContactId(application.getContact().getId());
             dto.setContactName(application.getContact().getName());
+            dto.setContactEmail(application.getContact().getEmail());
+            dto.setContactCategory(application.getContact().getCategory());
         }
         return dto;
     }

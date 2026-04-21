@@ -18,4 +18,7 @@ public class ApplicationResponseDTO {
     private LocalDate appliedDate;
     private LocalDate followUpDate;
     private String contactName;
+    private UUID contactId;
+    private String contactEmail;
+    private com.ghosted.entity.ContactCategory contactCategory;
 }

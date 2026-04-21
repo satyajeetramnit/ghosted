@@ -22,4 +22,5 @@ public class ApplicationRequestDTO {
     // Optional contact details for simplified creation
     private String contactName;
     private String contactEmail;
+    private UUID contactId;
 }
