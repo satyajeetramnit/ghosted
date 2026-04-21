@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 import com.ghosted.security.UserDetailsImpl;
@@ -55,6 +55,49 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(responses, "Applications fetched successfully"));
     }
 
+    // ─── Single Application ──────────────────────────────────────────────────────
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> getApplicationById(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.getApplicationById(id, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(response, "Application fetched successfully"));
+    }
+
+    // ─── Status ──────────────────────────────────────────────────────────────────
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateStatus(
+            @PathVariable UUID id,
+            @Valid @RequestBody ApplicationStatusUpdateDTO statusUpdateDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.updateStatus(id, userDetails.getId(), statusUpdateDTO);
+        return ResponseEntity.ok(ApiResponse.success(response, "Status updated successfully"));
+    }
+
+    // ─── Notes ───────────────────────────────────────────────────────────────────
+
+    @PostMapping("/{id}/notes")
+    public ResponseEntity<ApiResponse<NoteResponseDTO>> addNote(
+            @PathVariable UUID id,
+            @Valid @RequestBody NoteRequestDTO noteRequestDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        NoteResponseDTO response = applicationService.addNoteToApplication(id, userDetails.getId(), noteRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response, "Note added successfully"));
+    }
+
+    @GetMapping("/{id}/notes")
+    public ResponseEntity<ApiResponse<List<NoteResponseDTO>>> getNotes(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        List<NoteResponseDTO> response = applicationService.getNotesForApplication(id, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(response, "Notes fetched successfully"));
+    }
+
+    // ─── Global Interview Hub ─────────────────────────────────────────────────────
+
     @GetMapping("/interviews")
     public ResponseEntity<ApiResponse<java.util.List<InterviewResponseDTO>>> getAllInterviews(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -62,25 +105,8 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(response, "All interviews fetched successfully"));
     }
 
+    // ─── Interview Management ─────────────────────────────────────────────────────
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateStatus(
-            @PathVariable UUID id,
-            @Valid @RequestBody ApplicationStatusUpdateDTO statusUpdateDTO) {
-        ApplicationResponseDTO response = applicationService.updateStatus(id, statusUpdateDTO);
-        return ResponseEntity.ok(ApiResponse.success(response, "Status updated successfully"));
-    }
-
-    @PostMapping("/{id}/notes")
-    public ResponseEntity<ApiResponse<NoteResponseDTO>> addNote(
-            @PathVariable UUID id,
-            @Valid @RequestBody NoteRequestDTO noteRequestDTO) {
-        NoteResponseDTO response = applicationService.addNoteToApplication(id, noteRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(response, "Note added successfully"));
-    }
-
-    // Interview Management
     @PostMapping("/{id}/interviews")
     public ResponseEntity<ApiResponse<InterviewResponseDTO>> addInterview(
             @PathVariable UUID id,
@@ -110,7 +136,8 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(null, "Interview deleted successfully"));
     }
 
-    // OA Management
+    // ─── OA Management ───────────────────────────────────────────────────────────
+
     @PutMapping("/{id}/oa")
     public ResponseEntity<ApiResponse<OAResponseDTO>> updateOA(
             @PathVariable UUID id,

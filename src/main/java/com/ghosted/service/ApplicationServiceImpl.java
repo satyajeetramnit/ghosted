@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -86,7 +87,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             application.setJobTitle(requestDTO.getJobTitle().trim());
             application.setJobUrl(requestDTO.getJobUrl());
             application.setStatus(ApplicationStatus.APPLIED);
-            application.setAppliedDate(java.time.LocalDate.now()); // Explicitly set
+            application.setAppliedDate(java.time.LocalDate.now());
 
             log.info("Saving application entity...");
             application = applicationRepository.save(application);
@@ -95,17 +96,34 @@ public class ApplicationServiceImpl implements ApplicationService {
             return mapToResponseDTO(application);
         } catch (Exception e) {
             log.error("CRITICAL ERROR during application creation: {}", e.getMessage(), e);
-            throw e; // Rethrow to let GlobalExceptionHandler handle it
+            throw e;
         }
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ApplicationResponseDTO getApplicationById(UUID id, UUID userId) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
+
+        return mapToResponseDTO(application);
+    }
+
+    @Override
     @Transactional
-    public ApplicationResponseDTO updateStatus(UUID id, ApplicationStatusUpdateDTO statusUpdateDTO) {
+    public ApplicationResponseDTO updateStatus(UUID id, UUID userId, ApplicationStatusUpdateDTO statusUpdateDTO) {
         log.info("Updating status for application: {} to {}", id, statusUpdateDTO.getStatus());
         
         Application application = applicationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
 
         application.setStatus(statusUpdateDTO.getStatus());
         application = applicationRepository.save(application);
@@ -123,11 +141,15 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public NoteResponseDTO addNoteToApplication(UUID applicationId, NoteRequestDTO noteRequestDTO) {
+    public NoteResponseDTO addNoteToApplication(UUID applicationId, UUID userId, NoteRequestDTO noteRequestDTO) {
         log.info("Adding note to application: {}", applicationId);
         
         Application application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
 
         Note note = new Note();
         note.setApplication(application);
@@ -140,6 +162,28 @@ public class ApplicationServiceImpl implements ApplicationService {
         responseDTO.setContent(note.getContent());
         responseDTO.setCreatedAt(note.getCreatedAt());
         return responseDTO;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NoteResponseDTO> getNotesForApplication(UUID applicationId, UUID userId) {
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
+
+        return noteRepository.findByApplicationIdOrderByCreatedAtDesc(applicationId)
+                .stream()
+                .map(note -> {
+                    NoteResponseDTO dto = new NoteResponseDTO();
+                    dto.setId(note.getId());
+                    dto.setContent(note.getContent());
+                    dto.setCreatedAt(note.getCreatedAt());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -224,6 +268,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (requestDTO.getPlatform() != null) oa.setPlatform(requestDTO.getPlatform());
         if (requestDTO.getDeadline() != null) oa.setDeadline(requestDTO.getDeadline());
         if (requestDTO.getNotes() != null) oa.setNotes(requestDTO.getNotes());
+        if (requestDTO.getStatus() != null) oa.setStatus(requestDTO.getStatus());
         if (oa.getId() == null) {
             oa.setStatus(OAStatus.PENDING);
         }
@@ -231,6 +276,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         oa = oaRepository.save(oa);
         return mapToOAResponseDTO(oa);
     }
+
+    // ─── Mappers ────────────────────────────────────────────────────────────────
 
     private ApplicationResponseDTO mapToResponseDTO(Application application) {
         ApplicationResponseDTO dto = new ApplicationResponseDTO();

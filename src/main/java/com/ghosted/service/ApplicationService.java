@@ -18,9 +18,11 @@ import java.util.UUID;
 
 public interface ApplicationService {
     ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO);
-    ApplicationResponseDTO updateStatus(UUID id, ApplicationStatusUpdateDTO statusUpdateDTO);
+    ApplicationResponseDTO getApplicationById(UUID id, UUID userId);
+    ApplicationResponseDTO updateStatus(UUID id, UUID userId, ApplicationStatusUpdateDTO statusUpdateDTO);
     Page<ApplicationResponseDTO> getAllApplicationsForUser(UUID userId, Pageable pageable);
-    NoteResponseDTO addNoteToApplication(UUID applicationId, NoteRequestDTO noteRequestDTO);
+    NoteResponseDTO addNoteToApplication(UUID applicationId, UUID userId, NoteRequestDTO noteRequestDTO);
+    List<NoteResponseDTO> getNotesForApplication(UUID applicationId, UUID userId);
 
     // Interview Management
     InterviewResponseDTO addInterview(UUID applicationId, UUID userId, InterviewRequestDTO requestDTO);
@@ -31,3 +33,4 @@ public interface ApplicationService {
     // OA Management
     OAResponseDTO updateOA(UUID applicationId, UUID userId, OARequestDTO requestDTO);
 }
+
