@@ -24,6 +24,9 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
+import com.ghosted.security.UserDetailsImpl;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 @RestController
 @RequestMapping("/applications")
 public class ApplicationController {
@@ -41,18 +44,21 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<ApplicationResponseDTO>> createApplication(
-            @Valid @RequestBody ApplicationRequestDTO requestDTO) {
-        ApplicationResponseDTO response = applicationService.createApplication(requestDTO);
+            @Valid @RequestBody ApplicationRequestDTO requestDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.createApplication(userDetails.getId(), requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Application created successfully"));
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ApplicationResponseDTO>>> getApplications(
-            @RequestParam UUID userId, Pageable pageable) {
-        Page<ApplicationResponseDTO> responses = applicationService.getAllApplicationsForUser(userId, pageable);
+            Pageable pageable,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        Page<ApplicationResponseDTO> responses = applicationService.getAllApplicationsForUser(userDetails.getId(), pageable);
         return ResponseEntity.ok(ApiResponse.success(responses, "Applications fetched successfully"));
     }
+
 
     @PutMapping("/{id}/status")
     public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateStatus(

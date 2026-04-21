@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ApplicationService {
-    ApplicationResponseDTO createApplication(ApplicationRequestDTO requestDTO);
+    ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO);
     ApplicationResponseDTO updateStatus(UUID id, ApplicationStatusUpdateDTO statusUpdateDTO);
     Page<ApplicationResponseDTO> getAllApplicationsForUser(UUID userId, Pageable pageable);
     NoteResponseDTO addNoteToApplication(UUID applicationId, NoteRequestDTO noteRequestDTO);

@@ -11,9 +11,6 @@ import java.util.UUID;
 @Setter
 public class ApplicationRequestDTO {
 
-    @NotNull(message = "User ID is required")
-    private UUID userId;
-
     @NotBlank(message = "Company name is required")
     private String companyName;
 

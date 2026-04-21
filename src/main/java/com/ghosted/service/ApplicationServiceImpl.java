@@ -50,10 +50,10 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public ApplicationResponseDTO createApplication(ApplicationRequestDTO requestDTO) {
-        log.info("Creating application for user: {}", requestDTO.getUserId());
+    public ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO) {
+        log.info("Creating application for user: {}", userId);
         
-        User user = userRepository.findById(requestDTO.getUserId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Company company = companyRepository.findByNameIgnoreCase(requestDTO.getCompanyName())
@@ -68,7 +68,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             Contact newContact = new Contact();
             newContact.setName(requestDTO.getContactName());
             newContact.setEmail(requestDTO.getContactEmail());
-            newContact.setCompany(company);
+            newContact.setUser(user);
+            newContact.getCompanies().add(company);
+            newContact.setCategory(com.ghosted.entity.ContactCategory.HR);
             contact = contactRepository.save(newContact);
         }
 
