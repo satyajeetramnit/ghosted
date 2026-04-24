@@ -1,9 +1,24 @@
 package com.ghosted.service;
 
-import com.ghosted.dto.*;
-import com.ghosted.entity.*;
+import com.ghosted.dto.ApplicationRequestDTO;
+import com.ghosted.dto.ApplicationResponseDTO;
+import com.ghosted.dto.InterviewResponseDTO;
+import com.ghosted.dto.OAResponseDTO;
+import com.ghosted.entity.Application;
+import com.ghosted.entity.ApplicationStatus;
+import com.ghosted.entity.Company;
+import com.ghosted.entity.Contact;
+import com.ghosted.entity.Interview;
+import com.ghosted.entity.OnlineAssessment;
+import com.ghosted.entity.User;
 import com.ghosted.exception.ResourceNotFoundException;
-import com.ghosted.repository.*;
+import com.ghosted.repository.ApplicationRepository;
+import com.ghosted.repository.CompanyRepository;
+import com.ghosted.repository.ContactRepository;
+import com.ghosted.repository.InterviewRepository;
+import com.ghosted.repository.NoteRepository;
+import com.ghosted.repository.OnlineAssessmentRepository;
+import com.ghosted.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,9 +29,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
+    private static final Logger log = LoggerFactory.getLogger(ApplicationServiceImpl.class);
 
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;

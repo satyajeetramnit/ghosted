@@ -10,7 +10,6 @@ import java.util.UUID;
 @Getter
 @Setter
 public class ApplicationRequestDTO {
-
     @NotBlank(message = "Company name is required")
     private String companyName;
 

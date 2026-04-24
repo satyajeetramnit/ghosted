@@ -29,5 +29,7 @@ public class ContactRequestDTO {
 
     private String companyName;
 
+    private String industry;
+
     private List<UUID> companyIds; // Optional link to companies
 }

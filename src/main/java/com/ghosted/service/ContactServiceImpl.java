@@ -108,6 +108,7 @@ public class ContactServiceImpl implements ContactService {
                     .orElseGet(() -> {
                         Company newCompany = new Company();
                         newCompany.setName(companyName);
+                        newCompany.setIndustry(requestDTO.getIndustry());
                         return companyRepository.save(newCompany);
                     });
             companiesToSet.add(company);
@@ -132,6 +133,7 @@ public class ContactServiceImpl implements ContactService {
                 ContactResponseDTO.CompanyDTO cdto = new ContactResponseDTO.CompanyDTO();
                 cdto.setId(c.getId());
                 cdto.setName(c.getName());
+                cdto.setIndustry(c.getIndustry());
                 return cdto;
             }).collect(Collectors.toList());
             dto.setCompanies(companyDTOs);
