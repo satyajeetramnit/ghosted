@@ -2,10 +2,12 @@ package com.ghosted.service;
 
 import com.ghosted.dto.ContactRequestDTO;
 import com.ghosted.dto.ContactResponseDTO;
+import com.ghosted.entity.Application;
 import com.ghosted.entity.Company;
 import com.ghosted.entity.Contact;
 import com.ghosted.entity.User;
 import com.ghosted.exception.ResourceNotFoundException;
+import com.ghosted.repository.ApplicationRepository;
 import com.ghosted.repository.CompanyRepository;
 import com.ghosted.repository.ContactRepository;
 import com.ghosted.repository.UserRepository;
@@ -28,11 +30,16 @@ public class ContactServiceImpl implements ContactService {
     private final ContactRepository contactRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public ContactServiceImpl(ContactRepository contactRepository, UserRepository userRepository, CompanyRepository companyRepository) {
+    public ContactServiceImpl(ContactRepository contactRepository, 
+                              UserRepository userRepository, 
+                              CompanyRepository companyRepository,
+                              ApplicationRepository applicationRepository) {
         this.contactRepository = contactRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     @Override
@@ -81,6 +88,13 @@ public class ContactServiceImpl implements ContactService {
 
         if (!contact.getUser().getId().equals(userId)) {
             throw new SecurityException("Not authorized to delete this contact");
+        }
+
+        // Handle foreign key constraints by setting contact to null in linked applications
+        List<Application> linkedApplications = applicationRepository.findByContactId(id);
+        if (!linkedApplications.isEmpty()) {
+            linkedApplications.forEach(app -> app.setContact(null));
+            applicationRepository.saveAll(linkedApplications);
         }
 
         contactRepository.delete(contact);
