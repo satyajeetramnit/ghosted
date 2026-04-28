@@ -9,6 +9,8 @@ import com.ghosted.dto.InterviewRequestDTO;
 import com.ghosted.dto.InterviewResponseDTO;
 import com.ghosted.dto.OARequestDTO;
 import com.ghosted.dto.OAResponseDTO;
+import com.ghosted.dto.UpdateAppliedDateDTO;
+import com.ghosted.dto.UpdateContactsDTO;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,8 @@ public interface ApplicationService {
     ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO);
     ApplicationResponseDTO getApplicationById(UUID id, UUID userId);
     ApplicationResponseDTO updateStatus(UUID id, UUID userId, ApplicationStatusUpdateDTO statusUpdateDTO);
+    ApplicationResponseDTO updateAppliedDate(UUID id, UUID userId, UpdateAppliedDateDTO dto);
+    ApplicationResponseDTO updateContacts(UUID id, UUID userId, UpdateContactsDTO dto);
     Page<ApplicationResponseDTO> getAllApplicationsForUser(UUID userId, Pageable pageable);
     NoteResponseDTO addNoteToApplication(UUID applicationId, UUID userId, NoteRequestDTO noteRequestDTO);
     List<NoteResponseDTO> getNotesForApplication(UUID applicationId, UUID userId);
@@ -32,5 +36,8 @@ public interface ApplicationService {
 
     // OA Management
     OAResponseDTO updateOA(UUID applicationId, UUID userId, OARequestDTO requestDTO);
+
+    // Delete
+    void deleteApplication(UUID id, UUID userId);
 }
 

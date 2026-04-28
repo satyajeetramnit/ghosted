@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,11 +18,10 @@ public class ApplicationResponseDTO {
     private ApplicationStatus status;
     private LocalDate appliedDate;
     private LocalDate followUpDate;
-    private String contactName;
-    private UUID contactId;
-    private String contactEmail;
-    private String contactCategory;
-    
+
+    /** All contacts linked to this application. */
+    private List<ApplicationContactDTO> contacts;
+
     private java.util.List<InterviewResponseDTO> interviews;
     private OAResponseDTO oa;
 }

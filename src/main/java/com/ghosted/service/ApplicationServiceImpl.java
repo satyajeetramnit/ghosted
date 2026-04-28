@@ -1,9 +1,35 @@
 package com.ghosted.service;
 
-import com.ghosted.dto.*;
-import com.ghosted.entity.*;
+import com.ghosted.dto.ApplicationContactDTO;
+import com.ghosted.dto.ApplicationRequestDTO;
+import com.ghosted.dto.ApplicationResponseDTO;
+import com.ghosted.dto.ApplicationStatusUpdateDTO;
+import com.ghosted.dto.InterviewRequestDTO;
+import com.ghosted.dto.InterviewResponseDTO;
+import com.ghosted.dto.NoteRequestDTO;
+import com.ghosted.dto.NoteResponseDTO;
+import com.ghosted.dto.OARequestDTO;
+import com.ghosted.dto.OAResponseDTO;
+import com.ghosted.dto.UpdateAppliedDateDTO;
+import com.ghosted.dto.UpdateContactsDTO;
+import com.ghosted.entity.Application;
+import com.ghosted.entity.ApplicationStatus;
+import com.ghosted.entity.Company;
+import com.ghosted.entity.Contact;
+import com.ghosted.entity.Interview;
+import com.ghosted.entity.InterviewStatus;
+import com.ghosted.entity.Note;
+import com.ghosted.entity.OAStatus;
+import com.ghosted.entity.OnlineAssessment;
+import com.ghosted.entity.User;
 import com.ghosted.exception.ResourceNotFoundException;
-import com.ghosted.repository.*;
+import com.ghosted.repository.ApplicationRepository;
+import com.ghosted.repository.CompanyRepository;
+import com.ghosted.repository.ContactRepository;
+import com.ghosted.repository.InterviewRepository;
+import com.ghosted.repository.NoteRepository;
+import com.ghosted.repository.OnlineAssessmentRepository;
+import com.ghosted.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,9 +40,12 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
+    private static final Logger log = LoggerFactory.getLogger(ApplicationServiceImpl.class);
 
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
@@ -59,17 +88,33 @@ public class ApplicationServiceImpl implements ApplicationService {
                         return companyRepository.save(newCompany);
                     });
 
-            Contact contact = null;
-            if (requestDTO.getContactId() != null) {
-                log.info("Linking existing contact: {}", requestDTO.getContactId());
-                contact = contactRepository.findById(requestDTO.getContactId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Contact not found"));
-                
-                if (!contact.getCompanies().contains(company)) {
-                    contact.getCompanies().add(company);
-                    contactRepository.save(contact);
+            Application application = new Application();
+            application.setUser(user);
+            application.setCompany(company);
+            application.setJobTitle(requestDTO.getJobTitle().trim());
+            application.setJobUrl(requestDTO.getJobUrl());
+            application.setStatus(ApplicationStatus.APPLIED);
+            application.setAppliedDate(
+                requestDTO.getAppliedDate() != null ? requestDTO.getAppliedDate() : java.time.LocalDate.now()
+            );
+
+            // Link existing contacts
+            if (requestDTO.getContactIds() != null) {
+                for (java.util.UUID cid : requestDTO.getContactIds()) {
+                    Contact c = contactRepository.findById(cid)
+                            .orElseThrow(() -> new ResourceNotFoundException("Contact not found: " + cid));
+                    if (!c.getCompanies().contains(company)) {
+                        c.getCompanies().add(company);
+                        contactRepository.save(c);
+                    }
+                    application.getContacts().add(c);
                 }
-            } else if (requestDTO.getContactName() != null && !requestDTO.getContactName().trim().isEmpty()) {
+            }
+
+            // Inline-create a single new contact
+            if ((requestDTO.getContactIds() == null || requestDTO.getContactIds().isEmpty())
+                    && requestDTO.getContactName() != null
+                    && !requestDTO.getContactName().trim().isEmpty()) {
                 log.info("Creating new inline contact: {}", requestDTO.getContactName());
                 Contact newContact = new Contact();
                 newContact.setName(requestDTO.getContactName().trim());
@@ -77,17 +122,9 @@ public class ApplicationServiceImpl implements ApplicationService {
                 newContact.setUser(user);
                 newContact.getCompanies().add(company);
                 newContact.setCategory(com.ghosted.entity.ContactCategory.HR);
-                contact = contactRepository.save(newContact);
+                Contact saved = contactRepository.save(newContact);
+                application.getContacts().add(saved);
             }
-
-            Application application = new Application();
-            application.setUser(user);
-            application.setCompany(company);
-            application.setContact(contact);
-            application.setJobTitle(requestDTO.getJobTitle().trim());
-            application.setJobUrl(requestDTO.getJobUrl());
-            application.setStatus(ApplicationStatus.APPLIED);
-            application.setAppliedDate(java.time.LocalDate.now());
 
             log.info("Saving application entity...");
             application = applicationRepository.save(application);
@@ -277,6 +314,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         return mapToOAResponseDTO(oa);
     }
 
+    @Override
+    @Transactional
+    public void deleteApplication(UUID id, UUID userId) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found for this user");
+        }
+        applicationRepository.delete(application);
+    }
+
     // ─── Mappers ────────────────────────────────────────────────────────────────
 
     private ApplicationResponseDTO mapToResponseDTO(Application application) {
@@ -288,13 +336,22 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setStatus(application.getStatus());
         dto.setAppliedDate(application.getAppliedDate());
         dto.setFollowUpDate(application.getFollowUpDate());
-        
-        if (application.getContact() != null) {
-            dto.setContactId(application.getContact().getId());
-            dto.setContactName(application.getContact().getName());
-            dto.setContactEmail(application.getContact().getEmail());
-            dto.setContactCategory(application.getContact().getCategory() != null ? 
-                application.getContact().getCategory().name() : null);
+
+        // Map all linked contacts
+        if (application.getContacts() != null) {
+            dto.setContacts(application.getContacts().stream()
+                .map(c -> {
+                    ApplicationContactDTO cd = new ApplicationContactDTO();
+                    cd.setId(c.getId());
+                    cd.setName(c.getName());
+                    cd.setEmail(c.getEmail());
+                    cd.setPhone(c.getPhone());
+                    cd.setRole(c.getRole());
+                    cd.setLinkedInUrl(c.getLinkedInUrl());
+                    cd.setCategory(c.getCategory());
+                    return cd;
+                })
+                .collect(Collectors.toList()));
         }
 
         // Fetch and map interviews
@@ -336,5 +393,36 @@ public class ApplicationServiceImpl implements ApplicationService {
         dto.setStatus(oa.getStatus());
         dto.setNotes(oa.getNotes());
         return dto;
+    }
+
+    @Override
+    @Transactional
+    public ApplicationResponseDTO updateAppliedDate(UUID id, UUID userId, UpdateAppliedDateDTO dto) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
+        application.setAppliedDate(dto.getAppliedDate());
+        return mapToResponseDTO(applicationRepository.save(application));
+    }
+
+    @Override
+    @Transactional
+    public ApplicationResponseDTO updateContacts(UUID id, UUID userId, UpdateContactsDTO dto) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
+        application.getContacts().clear();
+        if (dto.getContactIds() != null) {
+            for (UUID cid : dto.getContactIds()) {
+                Contact c = contactRepository.findById(cid)
+                        .orElseThrow(() -> new ResourceNotFoundException("Contact not found: " + cid));
+                application.getContacts().add(c);
+            }
+        }
+        return mapToResponseDTO(applicationRepository.save(application));
     }
 }

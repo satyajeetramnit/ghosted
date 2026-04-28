@@ -136,6 +136,38 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(null, "Interview deleted successfully"));
     }
 
+    // ─── Applied Date ─────────────────────────────────────────────────────────────
+
+    @PutMapping("/{id}/applied-date")
+    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateAppliedDate(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateAppliedDateDTO dto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.updateAppliedDate(id, userDetails.getId(), dto);
+        return ResponseEntity.ok(ApiResponse.success(response, "Applied date updated successfully"));
+    }
+
+    // ─── Contacts ─────────────────────────────────────────────────────────────────
+
+    @PutMapping("/{id}/contacts")
+    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateContacts(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateContactsDTO dto,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.updateContacts(id, userDetails.getId(), dto);
+        return ResponseEntity.ok(ApiResponse.success(response, "Contacts updated successfully"));
+    }
+
+    // ─── Delete Application ───────────────────────────────────────────────────────
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteApplication(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        applicationService.deleteApplication(id, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(null, "Application deleted successfully"));
+    }
+
     // ─── OA Management ───────────────────────────────────────────────────────────
 
     @PutMapping("/{id}/oa")
