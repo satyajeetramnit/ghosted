@@ -90,10 +90,10 @@ public class ContactServiceImpl implements ContactService {
             throw new SecurityException("Not authorized to delete this contact");
         }
 
-        // Handle foreign key constraints by setting contact to null in linked applications
-        List<Application> linkedApplications = applicationRepository.findByContactId(id);
+        // Handle foreign key constraints by removing the contact from linked applications
+        List<Application> linkedApplications = applicationRepository.findByContactsId(id);
         if (!linkedApplications.isEmpty()) {
-            linkedApplications.forEach(app -> app.setContact(null));
+            linkedApplications.forEach(app -> app.getContacts().remove(contact));
             applicationRepository.saveAll(linkedApplications);
         }
 

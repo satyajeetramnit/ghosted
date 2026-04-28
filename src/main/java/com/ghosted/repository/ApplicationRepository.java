@@ -13,11 +13,11 @@ import java.util.UUID;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, UUID> {
     
-    @EntityGraph(attributePaths = {"company", "contact"})
+    @EntityGraph(attributePaths = {"company", "contacts"})
     Page<Application> findByUserId(UUID userId, Pageable pageable);
     
-    @EntityGraph(attributePaths = {"company", "contact"})
+    @EntityGraph(attributePaths = {"company", "contacts"})
     Page<Application> findByUserIdAndStatus(UUID userId, ApplicationStatus status, Pageable pageable);
 
-    java.util.List<Application> findByContactId(UUID contactId);
+    java.util.List<Application> findByContactsId(UUID contactId);
 }
