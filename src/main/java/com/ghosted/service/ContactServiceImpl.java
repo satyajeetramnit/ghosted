@@ -2,10 +2,12 @@ package com.ghosted.service;
 
 import com.ghosted.dto.ContactRequestDTO;
 import com.ghosted.dto.ContactResponseDTO;
+import com.ghosted.entity.Application;
 import com.ghosted.entity.Company;
 import com.ghosted.entity.Contact;
 import com.ghosted.entity.User;
 import com.ghosted.exception.ResourceNotFoundException;
+import com.ghosted.repository.ApplicationRepository;
 import com.ghosted.repository.CompanyRepository;
 import com.ghosted.repository.ContactRepository;
 import com.ghosted.repository.UserRepository;
@@ -28,11 +30,16 @@ public class ContactServiceImpl implements ContactService {
     private final ContactRepository contactRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final ApplicationRepository applicationRepository;
 
-    public ContactServiceImpl(ContactRepository contactRepository, UserRepository userRepository, CompanyRepository companyRepository) {
+    public ContactServiceImpl(ContactRepository contactRepository, 
+                              UserRepository userRepository, 
+                              CompanyRepository companyRepository,
+                              ApplicationRepository applicationRepository) {
         this.contactRepository = contactRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
+        this.applicationRepository = applicationRepository;
     }
 
     @Override
@@ -83,6 +90,13 @@ public class ContactServiceImpl implements ContactService {
             throw new SecurityException("Not authorized to delete this contact");
         }
 
+        // Handle foreign key constraints by setting contact to null in linked applications
+        List<Application> linkedApplications = applicationRepository.findByContactId(id);
+        if (!linkedApplications.isEmpty()) {
+            linkedApplications.forEach(app -> app.setContact(null));
+            applicationRepository.saveAll(linkedApplications);
+        }
+
         contactRepository.delete(contact);
     }
 
@@ -108,6 +122,7 @@ public class ContactServiceImpl implements ContactService {
                     .orElseGet(() -> {
                         Company newCompany = new Company();
                         newCompany.setName(companyName);
+                        newCompany.setIndustry(requestDTO.getIndustry());
                         return companyRepository.save(newCompany);
                     });
             companiesToSet.add(company);
@@ -132,6 +147,7 @@ public class ContactServiceImpl implements ContactService {
                 ContactResponseDTO.CompanyDTO cdto = new ContactResponseDTO.CompanyDTO();
                 cdto.setId(c.getId());
                 cdto.setName(c.getName());
+                cdto.setIndustry(c.getIndustry());
                 return cdto;
             }).collect(Collectors.toList());
             dto.setCompanies(companyDTOs);

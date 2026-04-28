@@ -18,4 +18,6 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     
     @EntityGraph(attributePaths = {"company", "contact"})
     Page<Application> findByUserIdAndStatus(UUID userId, ApplicationStatus status, Pageable pageable);
+
+    java.util.List<Application> findByContactId(UUID contactId);
 }

@@ -26,5 +26,6 @@ public class ContactResponseDTO {
     public static class CompanyDTO {
         private UUID id;
         private String name;
+        private String industry;
     }
 }

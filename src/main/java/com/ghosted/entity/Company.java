@@ -19,4 +19,7 @@ public class Company extends BaseEntity {
 
     @Column
     private String website;
+
+    @Column
+    private String industry;
 }
