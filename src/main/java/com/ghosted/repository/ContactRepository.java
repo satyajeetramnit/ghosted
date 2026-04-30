@@ -13,7 +13,6 @@ import org.springframework.data.jpa.repository.EntityGraph;
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, UUID> {
     
-    @EntityGraph(attributePaths = {"companies"})
     Page<Contact> findByUserId(UUID userId, Pageable pageable);
 }
 
