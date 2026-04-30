@@ -1,1 +1,1 @@
-web: java -jar target/*.jar
+web: java -Xmx384m -Xms384m -XX:+UseContainerSupport -jar target/*.jar
