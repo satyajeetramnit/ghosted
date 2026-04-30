@@ -68,4 +68,7 @@ public class UserProfile extends BaseEntity {
 
     @Column(name = "projects_json", columnDefinition = "TEXT")
     private String projectsJson;    // JSON array of ProjectTemplate
+
+    @Column(name = "preferences_json", columnDefinition = "TEXT")
+    private String preferencesJson; // JSON object for various user settings
 }

@@ -24,4 +24,5 @@ public class UserProfileDTO {
     private String experiencesJson;
     private String educationJson;
     private String projectsJson;
+    private String preferencesJson;
 }

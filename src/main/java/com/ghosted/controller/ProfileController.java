@@ -164,6 +164,7 @@ public class ProfileController {
         dto.setExperiencesJson(p.getExperiencesJson());
         dto.setEducationJson(p.getEducationJson());
         dto.setProjectsJson(p.getProjectsJson());
+        dto.setPreferencesJson(p.getPreferencesJson());
         return dto;
     }
 
@@ -183,6 +184,7 @@ public class ProfileController {
         if (dto.getExperiencesJson() != null) p.setExperiencesJson(dto.getExperiencesJson());
         if (dto.getEducationJson() != null) p.setEducationJson(dto.getEducationJson());
         if (dto.getProjectsJson() != null) p.setProjectsJson(dto.getProjectsJson());
+        if (dto.getPreferencesJson() != null) p.setPreferencesJson(dto.getPreferencesJson());
     }
 
     private SavedResumeDTO toResumeDTO(SavedResume r) {
