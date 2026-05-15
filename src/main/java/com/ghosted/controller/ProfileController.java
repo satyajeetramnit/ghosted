@@ -6,11 +6,11 @@ import com.ghosted.dto.UserProfileDTO;
 import com.ghosted.entity.SavedResume;
 import com.ghosted.entity.User;
 import com.ghosted.entity.UserProfile;
+import com.ghosted.exception.ResourceNotFoundException;
 import com.ghosted.repository.SavedResumeRepository;
 import com.ghosted.repository.UserProfileRepository;
 import com.ghosted.repository.UserRepository;
 import com.ghosted.security.UserDetailsImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,14 +33,17 @@ import java.util.stream.Collectors;
 @RequestMapping("/profile")
 public class ProfileController {
 
-    @Autowired
-    private UserProfileRepository profileRepo;
+    private final UserProfileRepository profileRepo;
+    private final SavedResumeRepository resumeRepo;
+    private final UserRepository userRepo;
 
-    @Autowired
-    private SavedResumeRepository resumeRepo;
-
-    @Autowired
-    private UserRepository userRepo;
+    public ProfileController(UserProfileRepository profileRepo,
+                             SavedResumeRepository resumeRepo,
+                             UserRepository userRepo) {
+        this.profileRepo = profileRepo;
+        this.resumeRepo = resumeRepo;
+        this.userRepo = userRepo;
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Profile
@@ -68,7 +71,8 @@ public class ProfileController {
             @RequestBody UserProfileDTO dto) {
 
         UUID userId = userDetails.getId();
-        User user = userRepo.findById(userId).orElseThrow();
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         UserProfile profile = profileRepo.findByUserId(userId)
                 .orElseGet(() -> {
@@ -105,7 +109,8 @@ public class ProfileController {
             @AuthenticationPrincipal UserDetailsImpl userDetails,
             @RequestBody SavedResumeDTO dto) {
 
-        User user = userRepo.findById(userDetails.getId()).orElseThrow();
+        User user = userRepo.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         SavedResume resume = new SavedResume();
         resume.setUser(user);

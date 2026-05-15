@@ -3,6 +3,7 @@ package com.ghosted.service;
 import com.ghosted.dto.ApplicationRequestDTO;
 import com.ghosted.dto.ApplicationResponseDTO;
 import com.ghosted.dto.ApplicationStatusUpdateDTO;
+import com.ghosted.dto.ApplicationUpdateDTO;
 import com.ghosted.dto.NoteRequestDTO;
 import com.ghosted.dto.NoteResponseDTO;
 import com.ghosted.dto.InterviewRequestDTO;
@@ -21,11 +22,16 @@ import java.util.UUID;
 public interface ApplicationService {
     ApplicationResponseDTO createApplication(UUID userId, ApplicationRequestDTO requestDTO);
     ApplicationResponseDTO getApplicationById(UUID id, UUID userId);
+    ApplicationResponseDTO updateApplication(UUID id, UUID userId, ApplicationUpdateDTO updateDTO);
     ApplicationResponseDTO updateStatus(UUID id, UUID userId, ApplicationStatusUpdateDTO statusUpdateDTO);
     ApplicationResponseDTO updateAppliedDate(UUID id, UUID userId, UpdateAppliedDateDTO dto);
     ApplicationResponseDTO updateContacts(UUID id, UUID userId, UpdateContactsDTO dto);
     Page<ApplicationResponseDTO> getAllApplicationsForUser(UUID userId, Pageable pageable);
+
+    // Notes
     NoteResponseDTO addNoteToApplication(UUID applicationId, UUID userId, NoteRequestDTO noteRequestDTO);
+    NoteResponseDTO updateNote(UUID applicationId, UUID noteId, UUID userId, NoteRequestDTO noteRequestDTO);
+    void deleteNote(UUID applicationId, UUID noteId, UUID userId);
     List<NoteResponseDTO> getNotesForApplication(UUID applicationId, UUID userId);
 
     // Interview Management
@@ -40,4 +46,5 @@ public interface ApplicationService {
     // Delete
     void deleteApplication(UUID id, UUID userId);
 }
+
 

@@ -5,16 +5,16 @@ The backend service for **Ghosted**, a comprehensive Job Application Tracking Sy
 ## 🚀 Tech Stack
 
 - **Framework**: Spring Boot 3.2.4
-- **Language**: Java 25
+- **Language**: Java 21
 - **Database**: PostgreSQL
 - **Security**: Spring Security & JWT Authentication
 - **ORM**: Spring Data JPA / Hibernate
-- **Boilerplate Reduction**: Lombok 1.18.44
+- **Boilerplate Reduction**: Lombok 1.18.46
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed on your machine:
-- **Java 25**
+- **Java 21**
 - **Maven** (optional, you can use the included wrapper)
 - **PostgreSQL 16+**
 

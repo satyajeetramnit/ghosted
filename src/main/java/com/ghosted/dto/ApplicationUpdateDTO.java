@@ -5,23 +5,18 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
 
+/**
+ * Partial-update DTO for an existing Application. All fields optional;
+ * only non-null fields are applied.
+ */
 @Getter
 @Setter
-public class ApplicationResponseDTO {
-    private UUID id;
+public class ApplicationUpdateDTO {
     private String companyName;
     private String jobTitle;
     private String jobUrl;
     private ApplicationStatus status;
     private LocalDate appliedDate;
     private LocalDate followUpDate;
-
-    /** All contacts linked to this application. */
-    private List<ApplicationContactDTO> contacts;
-
-    private java.util.List<InterviewResponseDTO> interviews;
-    private OAResponseDTO oa;
 }

@@ -65,6 +65,15 @@ public class ApplicationController {
         return ResponseEntity.ok(ApiResponse.success(response, "Application fetched successfully"));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ApplicationResponseDTO>> updateApplication(
+            @PathVariable UUID id,
+            @Valid @RequestBody ApplicationUpdateDTO updateDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        ApplicationResponseDTO response = applicationService.updateApplication(id, userDetails.getId(), updateDTO);
+        return ResponseEntity.ok(ApiResponse.success(response, "Application updated successfully"));
+    }
+
     // ─── Status ──────────────────────────────────────────────────────────────────
 
     @PutMapping("/{id}/status")
@@ -94,6 +103,25 @@ public class ApplicationController {
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
         List<NoteResponseDTO> response = applicationService.getNotesForApplication(id, userDetails.getId());
         return ResponseEntity.ok(ApiResponse.success(response, "Notes fetched successfully"));
+    }
+
+    @PutMapping("/{id}/notes/{noteId}")
+    public ResponseEntity<ApiResponse<NoteResponseDTO>> updateNote(
+            @PathVariable UUID id,
+            @PathVariable UUID noteId,
+            @Valid @RequestBody NoteRequestDTO noteRequestDTO,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        NoteResponseDTO response = applicationService.updateNote(id, noteId, userDetails.getId(), noteRequestDTO);
+        return ResponseEntity.ok(ApiResponse.success(response, "Note updated successfully"));
+    }
+
+    @DeleteMapping("/{id}/notes/{noteId}")
+    public ResponseEntity<ApiResponse<Void>> deleteNote(
+            @PathVariable UUID id,
+            @PathVariable UUID noteId,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        applicationService.deleteNote(id, noteId, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success(null, "Note deleted successfully"));
     }
 
     // ─── Global Interview Hub ─────────────────────────────────────────────────────

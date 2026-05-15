@@ -1,5 +1,6 @@
 package com.ghosted.dto;
 
+import com.ghosted.entity.ApplicationStatus;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,9 @@ public class ApplicationRequestDTO {
 
     private String jobUrl;
 
+    /** Optional initial status; defaults to APPLIED when null. */
+    private ApplicationStatus status;
+
     /** Optional applied date; defaults to today when null. */
     private LocalDate appliedDate;
 
@@ -29,3 +33,4 @@ public class ApplicationRequestDTO {
     private String contactName;
     private String contactEmail;
 }
+

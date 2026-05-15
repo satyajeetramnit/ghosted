@@ -4,6 +4,7 @@ import com.ghosted.dto.ApplicationContactDTO;
 import com.ghosted.dto.ApplicationRequestDTO;
 import com.ghosted.dto.ApplicationResponseDTO;
 import com.ghosted.dto.ApplicationStatusUpdateDTO;
+import com.ghosted.dto.ApplicationUpdateDTO;
 import com.ghosted.dto.InterviewRequestDTO;
 import com.ghosted.dto.InterviewResponseDTO;
 import com.ghosted.dto.NoteRequestDTO;
@@ -30,7 +31,8 @@ import com.ghosted.repository.InterviewRepository;
 import com.ghosted.repository.NoteRepository;
 import com.ghosted.repository.OnlineAssessmentRepository;
 import com.ghosted.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,9 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
@@ -93,7 +92,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             application.setCompany(company);
             application.setJobTitle(requestDTO.getJobTitle().trim());
             application.setJobUrl(requestDTO.getJobUrl());
-            application.setStatus(ApplicationStatus.APPLIED);
+            application.setStatus(
+                requestDTO.getStatus() != null ? requestDTO.getStatus() : ApplicationStatus.APPLIED
+            );
             application.setAppliedDate(
                 requestDTO.getAppliedDate() != null ? requestDTO.getAppliedDate() : java.time.LocalDate.now()
             );
@@ -322,6 +323,16 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!application.getUser().getId().equals(userId)) {
             throw new ResourceNotFoundException("Application not found for this user");
         }
+        // Manually clean up children (no cascade configured on the Application entity).
+        // Order matters: delete dependent rows before the parent to satisfy FK constraints.
+        oaRepository.findByApplicationId(id).ifPresent(oaRepository::delete);
+        interviewRepository.deleteAll(
+            interviewRepository.findByApplicationIdOrderByScheduledAtAsc(id)
+        );
+        noteRepository.deleteAll(
+            noteRepository.findByApplicationIdOrderByCreatedAtDesc(id)
+        );
+        application.getContacts().clear();
         applicationRepository.delete(application);
     }
 
@@ -424,5 +435,76 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
         return mapToResponseDTO(applicationRepository.save(application));
+    }
+
+    @Override
+    @Transactional
+    public ApplicationResponseDTO updateApplication(UUID id, UUID userId, ApplicationUpdateDTO dto) {
+        Application application = applicationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+        if (!application.getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Application not found");
+        }
+
+        if (dto.getJobTitle() != null && !dto.getJobTitle().isBlank()) {
+            application.setJobTitle(dto.getJobTitle().trim());
+        }
+        if (dto.getJobUrl() != null) {
+            application.setJobUrl(dto.getJobUrl());
+        }
+        if (dto.getStatus() != null) {
+            application.setStatus(dto.getStatus());
+        }
+        if (dto.getAppliedDate() != null) {
+            application.setAppliedDate(dto.getAppliedDate());
+        }
+        if (dto.getFollowUpDate() != null) {
+            application.setFollowUpDate(dto.getFollowUpDate());
+        }
+        if (dto.getCompanyName() != null && !dto.getCompanyName().isBlank()) {
+            String name = dto.getCompanyName().trim();
+            Company company = companyRepository.findByNameIgnoreCase(name)
+                    .orElseGet(() -> {
+                        Company c = new Company();
+                        c.setName(name);
+                        return companyRepository.save(c);
+                    });
+            application.setCompany(company);
+        }
+
+        return mapToResponseDTO(applicationRepository.save(application));
+    }
+
+    @Override
+    @Transactional
+    public NoteResponseDTO updateNote(UUID applicationId, UUID noteId, UUID userId, NoteRequestDTO noteRequestDTO) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found"));
+        if (note.getApplication() == null
+                || !note.getApplication().getId().equals(applicationId)
+                || !note.getApplication().getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Note not found for this application");
+        }
+        note.setContent(noteRequestDTO.getContent());
+        note = noteRepository.save(note);
+
+        NoteResponseDTO dto = new NoteResponseDTO();
+        dto.setId(note.getId());
+        dto.setContent(note.getContent());
+        dto.setCreatedAt(note.getCreatedAt());
+        return dto;
+    }
+
+    @Override
+    @Transactional
+    public void deleteNote(UUID applicationId, UUID noteId, UUID userId) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found"));
+        if (note.getApplication() == null
+                || !note.getApplication().getId().equals(applicationId)
+                || !note.getApplication().getUser().getId().equals(userId)) {
+            throw new ResourceNotFoundException("Note not found for this application");
+        }
+        noteRepository.delete(note);
     }
 }
